@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">No deliveries yet</title>
+  <desc id="desc">A parcel waiting beside a small leafy plant.</desc>
+  <ellipse cx="130" cy="151" rx="96" ry="13" fill="#E7EEE5"/>
+  <path d="M92 69h71l13 15v53H92V69Z" fill="#E7B96D"/>
+  <path d="M92 69h71l13 15h-84V69Z" fill="#F1D18E"/>
+  <path d="M127 69v68m-35-53h84" stroke="#D29A4F" stroke-width="4"/>
+  <path d="M49 137c4-24 16-37 34-39-2 20-14 33-34 39Z" fill="#76A77D"/>
+  <path d="M47 144c4-19 0-32-13-40 0 18 4 31 13 40Z" fill="#9ABF91"/>
+  <path d="M38 147h50l-7 13H45l-7-13Z" fill="#B97853"/>
+  <path d="M56 144c6-23 17-36 32-40" stroke="#47785C" stroke-linecap="round" stroke-width="3"/>
+  <circle cx="190" cy="57" r="16" fill="#F3E7C9"/>
+  <path d="M184 57h12m-6-6v12" stroke="#B28A4E" stroke-linecap="round" stroke-width="3"/>
+</svg>
