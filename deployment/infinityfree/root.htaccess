@@ -1,0 +1,17 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:app|config|database|routes|storage|tests)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+    RewriteRule \.(?:sql|bak|log)$ - [F,L,NC]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.(?:env|git)">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "\.(?:sql|bak|log)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

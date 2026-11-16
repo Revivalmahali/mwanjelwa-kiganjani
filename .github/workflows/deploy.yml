@@ -1,0 +1,83 @@
+name: Deploy Mwanjelwa Kiganjani to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infinityfree-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Assemble sanitized InfinityFree deployment tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="${GITHUB_WORKSPACE}/deployment-build/infinityfree"
+          mkdir -p "$stage/app" "$stage/config" "$stage/public" "$stage/storage/logs"
+
+          copy_runtime_tree() {
+            local source="$1"
+            local destination="$2"
+            rsync -a \
+              --exclude='**/.env*' \
+              --exclude='**/*.private.php' \
+              --exclude='**/*.local.php' \
+              --exclude='**/*.sql' \
+              --exclude='**/*.sql.*' \
+              --exclude='**/*.dump' \
+              --exclude='**/*.bak' \
+              --exclude='**/*.backup' \
+              --exclude='**/*.log' \
+              --exclude='**/backups/**' \
+              --exclude='**/logs/**' \
+              "$source/" "$destination/"
+          }
+
+          copy_runtime_tree app "$stage/app"
+          copy_runtime_tree config "$stage/config"
+          copy_runtime_tree public "$stage/public"
+          cp index.php "$stage/index.php"
+          cp deployment/infinityfree/root.htaccess "$stage/.htaccess"
+          cp deployment/infinityfree/config/database.php "$stage/config/database.php"
+
+          for protected_dir in app config storage storage/logs; do
+            printf '%s\n' 'Require all denied' > "$stage/$protected_dir/.htaccess"
+          done
+
+          if find "$stage" -type f \
+            \( -name '.env' -o -name '.env.*' -o -name 'database.private.php' \
+            -o -iname '*.sql' -o -iname '*.sql.*' -o -iname '*.dump' \
+            -o -iname '*.bak' -o -iname '*.backup' -o -iname '*.log' \
+            -o -iname '*.local.php' \) -print -quit | grep -q .; then
+            echo 'Refusing deployment: a prohibited secret, backup, SQL, or log file is present.' >&2
+            exit 1
+          fi
+
+      - name: Upload to InfinityFree htdocs over FTPS
+        uses: airvzxf/ftp-deployment-action@v3.1.0
+        with:
+          server: ${{ secrets.INFINITYFREE_FTP_SERVER }}
+          user: ${{ secrets.INFINITYFREE_FTP_USERNAME }}
+          password: ${{ secrets.INFINITYFREE_FTP_PASSWORD }}
+          port: ${{ secrets.INFINITYFREE_FTP_PORT }}
+          local_dir: ./deployment-build/infinityfree/
+          remote_dir: ./htdocs/
+          delete: "false"
+          exclude: "**/.env*, **/*.private.php, **/*.local.php, **/*.sql, **/*.sql.*, **/*.dump, **/*.bak, **/*.backup, **/*.log, **/backups/**, **/logs/**"
+          ftp_ssl_allow: "true"
+          ssl_verify_certificate: "true"
+          lftp_settings: "set ftp:ssl-force true;"
