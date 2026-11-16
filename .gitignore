@@ -1,0 +1,17 @@
+# Local secrets and environment files
+.env*
+**/.env*
+database.private.php
+*.local.php
+
+# Local database exports, backups, and logs
+/storage/backups/
+**/backups/**
+storage/logs/*
+**/logs/**
+*.sql
+*.sql.*
+*.dump
+*.bak
+*.backup
+*.log

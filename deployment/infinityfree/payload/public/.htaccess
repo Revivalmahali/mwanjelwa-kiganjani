@@ -1,0 +1,4 @@
+# Mwanjelwa Kiganjani - Apache Configuration
+
+# Disable directory listing
+Options -Indexes

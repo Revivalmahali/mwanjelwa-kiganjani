@@ -27,36 +27,23 @@ jobs:
         run: |
           set -euo pipefail
           stage="${GITHUB_WORKSPACE}/deployment-build/infinityfree"
-          mkdir -p "$stage/app" "$stage/config" "$stage/public" "$stage/storage/logs"
+          mkdir -p "$stage"
+          rsync -a \
+            --exclude='**/.env*' \
+            --exclude='**/*.private.php' \
+            --exclude='**/*.local.php' \
+            --exclude='**/*.sql' \
+            --exclude='**/*.sql.*' \
+            --exclude='**/*.dump' \
+            --exclude='**/*.bak' \
+            --exclude='**/*.backup' \
+            --exclude='**/*.log' \
+            --exclude='**/backups/**' \
+            --exclude='**/logs/**' \
+            deployment/infinityfree/payload/ "$stage/"
 
-          copy_runtime_tree() {
-            local source="$1"
-            local destination="$2"
-            rsync -a \
-              --exclude='**/.env*' \
-              --exclude='**/*.private.php' \
-              --exclude='**/*.local.php' \
-              --exclude='**/*.sql' \
-              --exclude='**/*.sql.*' \
-              --exclude='**/*.dump' \
-              --exclude='**/*.bak' \
-              --exclude='**/*.backup' \
-              --exclude='**/*.log' \
-              --exclude='**/backups/**' \
-              --exclude='**/logs/**' \
-              "$source/" "$destination/"
-          }
-
-          copy_runtime_tree app "$stage/app"
-          copy_runtime_tree config "$stage/config"
-          copy_runtime_tree public "$stage/public"
-          cp index.php "$stage/index.php"
-          cp deployment/infinityfree/root.htaccess "$stage/.htaccess"
-          cp deployment/infinityfree/config/database.php "$stage/config/database.php"
-
-          for protected_dir in app config storage storage/logs; do
-            printf '%s\n' 'Require all denied' > "$stage/$protected_dir/.htaccess"
-          done
+          mkdir -p "$stage/storage/logs"
+          printf '%s\n' 'Require all denied' > "$stage/storage/logs/.htaccess"
 
           if find "$stage" -type f \
             \( -name '.env' -o -name '.env.*' -o -name 'database.private.php' \
@@ -66,7 +53,6 @@ jobs:
             echo 'Refusing deployment: a prohibited secret, backup, SQL, or log file is present.' >&2
             exit 1
           fi
-
       - name: Upload to InfinityFree htdocs over FTPS
         uses: airvzxf/ftp-deployment-action@v3.1.0
         with:
